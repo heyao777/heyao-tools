@@ -3,8 +3,7 @@ import { SectionTitle } from "@/components/SectionTitle";
 
 const problems = ["Prompt 经常重复写", "文本复制后格式混乱", "简历经历表达不够清楚", "面试回答缺少结构", "常用模板散落在不同地方"];
 const features = [
-  ["Prompt 语义诊断器", "检查 Prompt 是否缺少关键信息"],
-  ["Prompt 优化改写器", "把简单 Prompt 改成结构化 Prompt"],
+  ["Prompt 诊断改写器", "检查 Prompt 是否缺少关键信息，并生成结构化优化版本"],
   ["角色提示词生成器", "快速生成可复用 System Prompt"],
   ["文本清洗工具", "清理复制文本中的格式问题"],
   ["求职表达优化器", "把普通经历整理成更清楚的表达"],

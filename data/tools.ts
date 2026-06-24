@@ -11,20 +11,12 @@ export type ToolItem = {
 
 export const tools: ToolItem[] = [
   {
-    title: "Prompt 语义诊断器",
-    description: "检查 Prompt 是否缺少任务目标、背景变量、输出格式或约束条件。",
-    href: "/tools/prompt-diagnosis",
-    category: "Prompt",
-    icon: "诊",
-    buttonText: "开始诊断",
-  },
-  {
-    title: "Prompt 优化改写器",
-    description: "把简单 Prompt 改成结构化 Prompt，生成多个可复用版本。",
+    title: "Prompt 诊断改写器",
+    description: "先检查 Prompt 缺少哪些关键信息，再生成结构化、可复制的优化版本。",
     href: "/tools/prompt-rewriter",
     category: "Prompt",
-    icon: "改",
-    buttonText: "改写 Prompt",
+    icon: "诊",
+    buttonText: "诊断并改写",
   },
   {
     title: "角色提示词生成器",
@@ -54,8 +46,7 @@ export const tools: ToolItem[] = [
 
 export const navItems = [
   { label: "首页", href: "/" },
-  { label: "Prompt 诊断", href: "/tools/prompt-diagnosis" },
-  { label: "Prompt 改写", href: "/tools/prompt-rewriter" },
+  { label: "Prompt 诊断改写", href: "/tools/prompt-rewriter" },
   { label: "角色生成器", href: "/tools/role-prompt-builder" },
   { label: "文本清洗", href: "/tools/text-cleaner" },
   { label: "求职表达", href: "/tools/resume-expression" },
