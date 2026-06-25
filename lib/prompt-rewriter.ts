@@ -319,8 +319,6 @@ function unique(items: string[]) {
 }
 
 export function detectScene(input: string): SceneId {
-  if (isSkillDesignIntent(input)) return "skillDesign";
-
   const scored = Object.entries(sceneConfigs)
     .filter(([scene]) => scene !== "general" && scene !== "skillDesign")
     .map(([scene, config]) => ({
@@ -329,22 +327,38 @@ export function detectScene(input: string): SceneId {
     }))
     .sort((a, b) => b.score - a.score);
 
+  const bestScene = scored[0];
+  const strongNonSkillScene = bestScene && bestScene.score >= 2;
+
+  if (isSkillDesignIntent(input, bestScene?.scene, bestScene?.score ?? 0) && !strongNonSkillScene) {
+    return "skillDesign";
+  }
+
   return scored[0]?.score ? scored[0].scene : "general";
 }
 
-function isSkillDesignIntent(input: string) {
+function isSkillDesignIntent(input: string, bestScene?: SceneId, bestSceneScore = 0) {
+  if (
+    bestScene &&
+    bestSceneScore >= 1 &&
+    includesAny(input, ["小红书", "账号", "起号", "涨粉", "选题", "封面", "简历", "面试", "论文", "文献", "学习计划", "会议记录", "文本整理"])
+  ) {
+    return false;
+  }
+
   const hasSkill = includesAny(input, ["skill", "技能"]);
-  const hasTool = includesAny(input, ["AI 工具", "工具", "助手", "智能体", "agent", "工作流", "自动化"]);
+  const hasExplicitTool = includesAny(input, ["AI 工具", "AI助手", "AI 助手", "智能体", "agent", "工作流", "自动化工具"]);
   const hasPlan = includesAny(input, ["方案", "可行方案", "设计", "开发", "功能", "功能模块", "产品"]);
-  const hasAiAssistant = includesAny(input, ["AI", "Ai", "ai"]) && includesAny(input, ["助手", "工具", "skill", "技能", "智能体", "agent"]);
-  const hasBusinessUsers = includesAny(input, ["目标用户", "用户", "商用", "商业化", "提高效率", "效率"]);
+  const hasCreationIntent = includesAny(input, ["做一个", "开发", "设计一个", "搭建", "创建", "实现一个", "做款", "做一款"]);
+  const hasAiAssistant = includesAny(input, ["AI", "Ai", "ai"]) && includesAny(input, ["助手", "skill", "技能", "智能体", "agent"]);
+  const hasBusinessUsers = includesAny(input, ["目标用户", "商用", "商业化"]) && includesAny(input, ["开发", "设计", "做一个", "创建"]);
 
   return (
-    (hasSkill && hasPlan) ||
-    (hasTool && hasPlan) ||
-    hasAiAssistant ||
+    (hasSkill && (hasPlan || hasCreationIntent)) ||
+    (hasExplicitTool && hasPlan && hasCreationIntent) ||
+    (hasAiAssistant && hasCreationIntent) ||
     (includesAny(input, ["智能体"]) && includesAny(input, ["功能", "方案"])) ||
-    (includesAny(input, ["目标用户"]) && includesAny(input, ["商用", "商业化", "提高效率"]))
+    hasBusinessUsers
   );
 }
 
