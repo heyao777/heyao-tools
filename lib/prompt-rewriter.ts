@@ -78,7 +78,7 @@ type SceneConfig = {
 
 export const rewriteModeDetails: RewriteModeDetail[] = [
   { name: "通用增强", description: "适合大多数 AI 提问场景" },
-  { name: "内容创作", description: "适合文章、标题、脚本、小红书和公众号" },
+  { name: "内容创作", description: "适合文章、标题、脚本、内容账号和短内容策划" },
   { name: "学习写作", description: "适合论文、读书笔记、课程作业和知识总结" },
   { name: "求职准备", description: "适合简历、面试、自我介绍和经历表达" },
   { name: "商务表达", description: "适合邮件、汇报、方案和沟通表达" },
@@ -89,9 +89,9 @@ export const rewriteModes = rewriteModeDetails.map((mode) => mode.name);
 
 export const promptExamples = [
   {
-    label: "小红书账号运营",
+    label: "内容账号运营",
     value:
-      "我想在小红书上开一个 AI 科普账号，主要讲 Codex、AI 编程和普通人如何使用 AI 提高效率。请帮我设计一个快速起号方案，包括账号定位、目标用户、内容栏目、前 30 天选题、封面风格、发布节奏和涨粉方法，输出为 Markdown 清单。",
+      "我想在抖音上开一个 AI 科普账号，主要讲 Codex、AI 编程和普通人如何使用 AI 提高效率。请帮我设计一个快速起号方案，包括账号定位、目标用户、内容栏目、前 30 天选题、呈现风格、发布节奏和涨粉方法，输出为 Markdown 清单。",
   },
   {
     label: "简历优化",
@@ -170,20 +170,42 @@ const sceneConfigs: Record<SceneId, SceneConfig> = {
     ],
   },
   xiaohongshu: {
-    label: "小红书 / 内容运营",
-    role: "资深小红书内容运营专家",
-    keywords: ["小红书", "账号", "爆款", "笔记", "选题", "涨粉", "运营", "内容策划", "A/B", "封面"],
+    label: "内容账号运营",
+    role: "资深内容平台运营与账号增长专家",
+    keywords: [
+      "小红书",
+      "抖音",
+      "公众号",
+      "视频号",
+      "B站",
+      "知乎",
+      "微博",
+      "快手",
+      "账号",
+      "起号",
+      "爆款",
+      "笔记",
+      "短视频",
+      "选题",
+      "涨粉",
+      "运营",
+      "内容策划",
+      "A/B",
+      "封面",
+      "发布节奏",
+    ],
     defaultTaskType: "设计内容运营方案",
-    defaultTopic: "小红书账号内容策划",
-    defaultAudience: "小红书目标用户",
-    defaultPlatform: "小红书",
+    defaultTopic: "内容账号运营方案",
+    defaultAudience: "目标内容平台用户",
+    defaultPlatform: "建议补充",
     defaultTone: "自然、清楚、有内容感",
     steps: [
       "账号基础定位与差异化",
-      "目标受众与用户痛点",
-      "内容规划",
-      "视觉风格与封面模板",
-      "运营策略",
+      "目标用户与内容需求",
+      "内容栏目与选题规划",
+      "内容形式与呈现风格",
+      "发布节奏与增长策略",
+      "互动转化与数据复盘",
       "变现路径",
       "输出格式要求",
     ],
@@ -242,7 +264,7 @@ const sceneConfigs: Record<SceneId, SceneConfig> = {
     defaultTaskType: "策划中文内容",
     defaultTopic: "文章或内容主题",
     defaultAudience: "目标读者",
-    defaultPlatform: "公众号 / 内容平台",
+    defaultPlatform: "内容发布场景",
     defaultTone: "自然、有逻辑、有传播感",
     steps: ["明确主题与受众", "生成标题方向", "设计文章结构", "补充论点和案例", "设计开头与结尾", "输出可执行写作大纲"],
   },
@@ -281,7 +303,7 @@ const sceneConfigs: Record<SceneId, SceneConfig> = {
   },
 };
 
-const platformWords = ["AI Skill", "AI 工具", "智能体", "小红书", "公众号", "知乎", "B站", "抖音", "视频号", "微博", "简历", "面试", "邮件", "网站"];
+const platformWords = ["小红书", "公众号", "知乎", "B站", "抖音", "视频号", "微博", "快手", "网站", "简历", "面试", "邮件", "AI Skill", "AI 工具", "智能体"];
 const toneWords = ["轻松", "亲切", "专业", "严肃", "口语化", "自然", "正式", "简洁", "温和", "犀利", "活泼"];
 const formatWords = ["Markdown", "表格", "清单", "步骤", "大纲", "JSON", "分点", "列表", "对比", "标题"];
 const genericKeywords = [
@@ -400,8 +422,9 @@ function extractTopic(input: string, scene: SceneId) {
   }
 
   if (scene === "xiaohongshu") {
-    if (includesAny(input, ["AI 科普", "ai 科普", "人工智能科普"])) return "AI 科普类小红书账号";
-    if (includesAny(input, ["Codex", "代码", "编程"])) return "代码与 AI 结合的内容账号";
+    if (includesAny(input, ["AI 科普", "ai 科普", "人工智能科普"])) return "AI 科普类内容账号";
+    if (includesAny(input, ["Codex", "代码", "编程"])) return "AI 编程与效率工具类内容账号";
+    return "内容账号运营方案";
   }
 
   if (scene === "resume") {
@@ -421,8 +444,12 @@ function extractAudience(input: string, scene: SceneId) {
   if (scene === "skillDesign" && includesAny(input, ["小说", "写小说", "小说写作"])) {
     return "想用 AI 写小说、提升写作效率、进行商业内容创作的人群";
   }
-  if (includesAny(input, ["编程爱好者", "开发者", "AI 辅助编程"])) return "对 AI、编程、效率工具感兴趣的小红书用户";
-  if (includesAny(input, ["小红书用户"])) return "小红书用户";
+  if (scene === "xiaohongshu" && includesAny(input, ["编程爱好者", "开发者", "AI 辅助编程", "AI 编程", "Codex"])) {
+    return "对 AI、编程和效率工具感兴趣的目标内容平台用户";
+  }
+  if (scene === "xiaohongshu" && includesAny(input, ["用户", "受众", "粉丝", "读者", "观众"])) {
+    return "目标内容平台用户";
+  }
   if (includesAny(input, ["HR", "面试官"])) return "HR 和面试官";
   if (includesAny(input, ["客户"])) return "客户或合作方";
   if (includesAny(input, ["学生", "学习者"])) return "学生或学习者";
@@ -765,15 +792,15 @@ export function buildPromptChecklist(analysis: PromptAnalysis): PromptHealthItem
       label: "明确任务",
       included: Boolean(analysis.taskType && analysis.rawInput.length >= 8),
       suggestion: "建议明确你希望 AI 完成什么任务，例如分析、改写、策划或拆解。",
-      example: "例如：请帮我生成一份小红书账号冷启动运营方案。",
+      example: "例如：请帮我生成一份内容账号冷启动运营方案。",
       weight: 15,
     },
     {
       key: "scene",
       label: "具体场景",
       included: analysis.scene !== "general",
-      suggestion: "建议补充使用场景，例如小红书、简历、论文、学习计划或产品需求。",
-      example: "例如：用于小红书内容运营，目标是快速起号。",
+      suggestion: "建议补充使用场景，例如内容账号运营、简历、论文、学习计划或产品需求。",
+      example: "例如：用于内容平台账号运营，目标是快速起号。",
       weight: 15,
     },
     {

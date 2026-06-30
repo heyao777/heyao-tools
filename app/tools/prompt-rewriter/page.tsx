@@ -420,7 +420,7 @@ export default function PromptRewriterPage() {
                   setInput(event.target.value);
                   if (event.target.value.trim()) setError("");
                 }}
-                placeholder="例如：我想在小红书上开一个 AI 科普账号，主要讲 Codex 和 AI 编程，帮我设计一个快速起号方案。"
+                placeholder="例如：我想在目标内容平台上开一个 AI 科普账号，主要讲 Codex 和 AI 编程，帮我设计一个快速起号方案。"
               />
               <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
                 <span>当前输入：{inputCount} 字</span>
