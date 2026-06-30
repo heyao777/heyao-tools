@@ -185,13 +185,13 @@ export default function TextCleanerPage() {
   }
 
   return (
-    <main className="bg-[#F8FAF7]">
-      <section className="mx-auto max-w-[1200px] px-5 py-10">
+    <main className="heyao-page">
+      <section className="mx-auto max-w-[1280px] px-5 py-10 sm:py-12">
         <div className="mb-8 max-w-3xl">
-          <span className="inline-flex rounded-md border border-[#B6D8D2] bg-[#E0F2F1] px-2.5 py-1 text-xs font-medium text-[#0F3D3E]">
+          <span className="inline-flex rounded-full border border-[#BFDCD4] bg-[#E6F6F0] px-3 py-1 text-xs font-semibold text-[#063F3A]">
             文本工具
           </span>
-          <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">文本清洗工具</h1>
+          <h1 className="mt-4 text-4xl font-bold tracking-tight text-[#07151F] sm:text-5xl">文本清洗工具</h1>
           <p className="mt-4 text-base leading-7 text-slate-600">
             面向中文 AI 使用场景，清理空格、空行、Markdown、Emoji、AI 套话和杂乱符号。所有处理都在浏览器本地完成。
           </p>
@@ -203,10 +203,10 @@ export default function TextCleanerPage() {
               key={scene.id}
               type="button"
               onClick={() => applyScene(scene)}
-              className={`min-h-10 rounded-md border px-3 py-2 text-sm font-semibold transition ${
+              className={`min-h-10 rounded-xl border px-3 py-2 text-sm font-semibold transition ${
                 activeSceneId === scene.id
-                  ? "border-[#0F3D3E] bg-[#0F3D3E] text-white"
-                  : "border-[#B6D8D2] bg-white text-[#0F3D3E] hover:bg-[#E0F2F1]"
+                  ? "border-[#063F3A] bg-[#063F3A] text-white shadow-[0_10px_22px_rgba(6,63,58,0.16)]"
+                  : "border-[#BFDCD4] bg-white/80 text-[#063F3A] hover:bg-[#E6F6F0]"
               }`}
             >
               {scene.label}
@@ -240,7 +240,7 @@ export default function TextCleanerPage() {
                 type="checkbox"
                 checked={removeChineseInnerSpaces}
                 onChange={(event) => setRemoveChineseInnerSpaces(event.target.checked)}
-                className="mt-1 h-4 w-4 rounded border-slate-300 accent-[#0F3D3E]"
+                className="mt-1 h-4 w-4 rounded border-slate-300 accent-[#063F3A]"
               />
               删除中文字符之间的空格，适合 PDF 复制后出现“中 文 间 隔”的情况。
             </label>
@@ -294,7 +294,7 @@ export default function TextCleanerPage() {
               value={output}
               readOnly
               placeholder="清洗结果会显示在这里"
-              className="min-h-[420px] w-full resize-y rounded-lg border border-slate-300 bg-slate-50 px-4 py-3 text-sm leading-7 text-slate-900 outline-none"
+              className="heyao-focus min-h-[420px] w-full resize-y rounded-2xl border border-[#D8E7E1] bg-[#FBFDFB] px-4 py-3 text-sm leading-7 text-slate-900 outline-none"
             />
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <Button type="button" variant="secondary" onClick={replaceInput} disabled={!output}>
@@ -307,7 +307,7 @@ export default function TextCleanerPage() {
           </Card>
         </div>
 
-        <section className="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="heyao-surface mt-6 rounded-2xl p-5">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
             <Stat label="原文字数" value={stats.originalCount} />
             <Stat label="清洗后字数" value={stats.cleanedCount} />
@@ -318,11 +318,11 @@ export default function TextCleanerPage() {
           </div>
         </section>
 
-        <section className="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="heyao-surface mt-6 rounded-2xl p-5">
           <h2 className="mb-4 text-base font-bold text-slate-950">清洗规则说明</h2>
           <div className="grid gap-3 text-sm leading-6 text-slate-600 md:grid-cols-2 lg:grid-cols-3">
             {ruleButtons.map((item) => (
-              <p key={item.rule} className="rounded-md bg-[#F8FAF7] p-3">
+              <p key={item.rule} className="heyao-soft-panel rounded-2xl p-3">
                 <span className="font-semibold text-slate-900">{item.label}：</span>
                 {item.description}
               </p>
@@ -355,16 +355,16 @@ export default function TextCleanerPage() {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-lg bg-[#F8FAF7] p-4">
+    <div className="heyao-soft-panel rounded-2xl p-4">
       <p className="text-xs text-slate-500">{label}</p>
-      <p className="mt-1 text-2xl font-bold text-[#0F3D3E]">{value}</p>
+      <p className="mt-1 text-2xl font-bold text-[#063F3A]">{value}</p>
     </div>
   );
 }
 
 function InfoCard({ title, content }: { title: string; content: string }) {
   return (
-    <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+    <article className="heyao-surface rounded-2xl p-5">
       <h2 className="text-base font-bold text-slate-950">{title}</h2>
       <p className="mt-3 text-sm leading-7 text-slate-600">{content}</p>
     </article>

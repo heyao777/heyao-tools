@@ -78,7 +78,7 @@ ${result.interviewVersion}`
                 value={targetRole}
                 onChange={(event) => setTargetRole(event.target.value)}
                 placeholder="例如：AI 内容运营"
-                className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-3 text-sm outline-none focus:border-[#1E6F5C] focus:ring-4 focus:ring-[#E0F2F1]"
+                className="heyao-focus mt-2 w-full rounded-2xl border border-[#D8E7E1] bg-white/90 px-3 py-3 text-sm outline-none focus:border-[#0B6B5E]"
               />
             </label>
             <label className="block text-sm font-semibold text-slate-900">
@@ -91,7 +91,7 @@ ${result.interviewVersion}`
                 value={ability}
                 onChange={(event) => setAbility(event.target.value)}
                 placeholder="例如：内容策划、中文写作、活动传播"
-                className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-3 text-sm outline-none focus:border-[#1E6F5C] focus:ring-4 focus:ring-[#E0F2F1]"
+                className="heyao-focus mt-2 w-full rounded-2xl border border-[#D8E7E1] bg-white/90 px-3 py-3 text-sm outline-none focus:border-[#0B6B5E]"
               />
             </label>
             <label className="block text-sm font-semibold text-slate-900">
@@ -99,7 +99,7 @@ ${result.interviewVersion}`
               <select
                 value={scenario}
                 onChange={(event) => setScenario(event.target.value)}
-                className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm outline-none focus:border-[#1E6F5C] focus:ring-4 focus:ring-[#E0F2F1]"
+                className="heyao-focus mt-2 w-full rounded-2xl border border-[#D8E7E1] bg-white/90 px-3 py-3 text-sm outline-none focus:border-[#0B6B5E]"
               >
                 <option>简历 bullet</option>
                 <option>面试回答</option>
@@ -141,14 +141,14 @@ ${result.interviewVersion}`
             <ResultCard title="可突出的能力关键词">
               <div className="flex flex-wrap gap-2">
                 {result.keywords.map((item) => (
-                  <span key={item} className="rounded-md bg-[#E0F2F1] px-3 py-1 text-sm font-medium text-[#0F3D3E]">
+                  <span key={item} className="rounded-xl border border-[#BFDCD4] bg-[#E6F6F0] px-3 py-1 text-sm font-medium text-[#063F3A]">
                     {item}
                   </span>
                 ))}
               </div>
             </ResultCard>
             <ResultCard title="优化表达模板" copyText={result.template}>
-              <pre className="whitespace-pre-wrap rounded-lg bg-slate-50 p-4">{result.template}</pre>
+              <pre className="whitespace-pre-wrap rounded-2xl border border-[#D8E7E1] bg-[#FBFDFB] p-4">{result.template}</pre>
             </ResultCard>
             <ResultCard title="简历版表达" copyText={result.resumeVersion}>
               <p>{result.resumeVersion}</p>

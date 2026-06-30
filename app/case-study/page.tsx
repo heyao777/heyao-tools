@@ -11,8 +11,8 @@ const features = [
 
 export default function CaseStudyPage() {
   return (
-    <main className="bg-[#F8FAF7]">
-      <section className="mx-auto max-w-[1200px] px-5 py-12">
+    <main className="heyao-page">
+      <section className="mx-auto max-w-[1280px] px-5 py-12">
         <SectionTitle
           eyebrow="工具箱设计说明"
           title="我为什么做河妖 HeYao Tools"
@@ -32,7 +32,7 @@ export default function CaseStudyPage() {
             <h2 className="text-lg font-bold text-slate-950">我的高频问题</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {problems.map((problem) => (
-                <div key={problem} className="rounded-md bg-[#E0F2F1] px-3 py-2 text-sm font-medium text-[#0F3D3E]">
+                <div key={problem} className="rounded-xl border border-[#BFDCD4] bg-[#E6F6F0] px-3 py-2 text-sm font-medium text-[#063F3A]">
                   {problem}
                 </div>
               ))}

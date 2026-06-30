@@ -56,7 +56,7 @@ export default function RolePromptBuilderPage() {
                 <select
                   value={form[field.key]}
                   onChange={(event) => update(field.key, event.target.value as never)}
-                  className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm text-slate-900 outline-none focus:border-[#1E6F5C] focus:ring-4 focus:ring-[#E0F2F1]"
+                  className="heyao-focus mt-2 w-full rounded-2xl border border-[#D8E7E1] bg-white/90 px-3 py-3 text-sm text-slate-900 outline-none focus:border-[#0B6B5E]"
                 >
                   {field.options.map((item) => (
                     <option key={item}>{item}</option>
@@ -78,7 +78,7 @@ export default function RolePromptBuilderPage() {
       result={
         result ? (
           <ResultCard title="System Prompt" copyText={result}>
-            <pre className="whitespace-pre-wrap rounded-lg bg-slate-50 p-4">{result}</pre>
+            <pre className="whitespace-pre-wrap rounded-2xl border border-[#D8E7E1] bg-[#FBFDFB] p-4">{result}</pre>
           </ResultCard>
         ) : (
           <EmptyState title="等待生成角色提示词" description="选择角色、任务、语气和输出格式后，生成可复用的 System Prompt。" />

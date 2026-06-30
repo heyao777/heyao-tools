@@ -3,8 +3,8 @@ import { SectionTitle } from "@/components/SectionTitle";
 
 export default function AboutPage() {
   return (
-    <main className="bg-[#F8FAF7]">
-      <section className="mx-auto max-w-[900px] px-5 py-12">
+    <main className="heyao-page">
+      <section className="mx-auto max-w-[960px] px-5 py-12">
         <SectionTitle
           eyebrow="关于"
           title="关于河妖 HeYao Tools"

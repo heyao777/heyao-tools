@@ -8,10 +8,10 @@ function colorFor(score: number) {
 
 export function ScoreBar({ item }: { item: DimensionScore }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
+    <div className="heyao-soft-panel rounded-2xl p-4">
       <div className="flex items-center justify-between gap-3">
         <h4 className="text-sm font-semibold text-slate-900">{item.label}</h4>
-        <span className="text-sm font-bold text-[#0F3D3E]">{item.score}</span>
+        <span className="text-sm font-bold text-[#063F3A]">{item.score}</span>
       </div>
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
         <div className={`h-full rounded-full ${colorFor(item.score)}`} style={{ width: `${item.score}%` }} />

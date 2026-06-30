@@ -15,12 +15,12 @@ export function ToolShell({
   result: ReactNode;
 }) {
   return (
-    <main className="bg-[#F8FAF7]">
-      <section className="mx-auto max-w-[1200px] px-5 py-10">
+    <main className="heyao-page">
+      <section className="mx-auto max-w-[1280px] px-5 py-10 sm:py-12">
         <div className="mb-8 max-w-3xl">
           <Badge>{badge}</Badge>
-          <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">{title}</h1>
-          <p className="mt-4 text-base leading-7 text-slate-600">{description}</p>
+          <h1 className="mt-4 text-4xl font-bold tracking-tight text-[#07151F] sm:text-5xl">{title}</h1>
+          <p className="mt-4 max-w-2xl text-base leading-8 text-slate-600">{description}</p>
         </div>
         <div className="grid gap-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-start">
           {input}

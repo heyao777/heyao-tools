@@ -156,7 +156,7 @@ function UnderstandingCard({ analysis }: { analysis: PromptAnalysis }) {
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         {fields.map(([label, value]) => (
-          <div key={label} className="rounded-lg border border-slate-200 bg-[#F8FAF7] p-3">
+          <div key={label} className="heyao-soft-panel rounded-2xl p-3">
             <p className="text-xs font-semibold text-slate-500">{label}</p>
             <p className="mt-1 text-sm font-semibold leading-6 text-slate-900">{fieldValue(value)}</p>
           </div>
@@ -174,31 +174,31 @@ function PromptHealthCard({ items, score }: { items: PromptHealthItem[]; score: 
           <h2 className="text-lg font-bold text-slate-950">Prompt 体检报告</h2>
           <p className="mt-1 text-sm leading-6 text-slate-500">完整度评分会根据任务、场景、对象、格式和约束实时变化。</p>
         </div>
-        <div className="rounded-lg border border-[#B6D8D2] bg-[#E0F2F1] px-4 py-3 text-center text-[#0F3D3E]">
+        <div className="rounded-2xl border border-[#BFDCD4] bg-[#E6F6F0] px-4 py-3 text-center text-[#063F3A]">
           <p className="text-xs font-semibold">完整度评分</p>
           <p className="mt-1 text-2xl font-bold">{score} / 100</p>
         </div>
       </div>
       <div className="space-y-3">
         {items.map((item) => (
-          <div key={item.key} className="rounded-lg border border-slate-200 bg-[#F8FAF7] p-4">
+          <div key={item.key} className="heyao-soft-panel rounded-2xl p-4">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p className="text-sm font-bold text-slate-900">{item.label}</p>
                 <p className="mt-1 text-xs leading-5 text-slate-500">{item.included ? "这一项已经能被识别。" : item.suggestion}</p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="rounded-md bg-white px-2 py-1 text-xs font-semibold text-slate-500">{item.weight} 分</span>
+                <span className="rounded-lg bg-white px-2 py-1 text-xs font-semibold text-slate-500">{item.weight} 分</span>
                 <span
-                  className={`rounded-md px-2 py-1 text-xs font-semibold ${
-                    item.included ? "bg-[#E0F2F1] text-[#0F3D3E]" : "bg-amber-100 text-amber-800"
+                  className={`rounded-lg px-2 py-1 text-xs font-semibold ${
+                    item.included ? "bg-[#E6F6F0] text-[#063F3A]" : "bg-amber-100 text-amber-800"
                   }`}
                 >
                   {item.included ? "已包含" : "建议补充"}
                 </span>
               </div>
             </div>
-            {!item.included ? <p className="mt-3 rounded-md bg-white px-3 py-2 text-xs leading-5 text-slate-600">可以这样补：{item.example}</p> : null}
+            {!item.included ? <p className="mt-3 rounded-xl bg-white px-3 py-2 text-xs leading-5 text-slate-600">可以这样补：{item.example}</p> : null}
           </div>
         ))}
       </div>
@@ -226,7 +226,7 @@ function ResultTabs({
         <h2 className="text-lg font-bold text-slate-950">结果版本</h2>
         <p className="mt-1 text-sm leading-6 text-slate-500">默认看专业增强版，也可以切换到基础版或可复用模板版。</p>
       </div>
-      <div className="grid gap-2 rounded-lg bg-slate-100 p-1 sm:grid-cols-3">
+      <div className="grid gap-2 rounded-2xl border border-[#D8E7E1] bg-[#F2F8F5] p-1 sm:grid-cols-3">
         {resultTabs.map((tab) => {
           const selected = tab.key === activeTab;
           return (
@@ -235,11 +235,11 @@ function ResultTabs({
               type="button"
               onClick={() => onChange(tab.key)}
               className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
-                selected ? "bg-[#0F3D3E] text-white shadow-sm" : "bg-transparent text-slate-600 hover:bg-white"
+                selected ? "bg-[#063F3A] text-white shadow-sm" : "bg-transparent text-slate-600 hover:bg-white"
               }`}
             >
               <span>{tab.title}</span>
-              {tab.key === recommendedKey ? <span className="ml-2 rounded bg-[#E0F2F1] px-1.5 py-0.5 text-[11px] text-[#0F3D3E]">推荐</span> : null}
+              {tab.key === recommendedKey ? <span className="ml-2 rounded bg-[#E6F6F0] px-1.5 py-0.5 text-[11px] text-[#063F3A]">推荐</span> : null}
             </button>
           );
         })}
@@ -252,10 +252,10 @@ function ResultTabs({
         </div>
         <CopyButton text={text} idleLabel={active.copyLabel} className="w-full sm:w-auto" />
       </div>
-      <pre className="mt-4 max-h-[640px] overflow-auto whitespace-pre-wrap rounded-lg bg-slate-50 p-4 text-sm leading-7 text-slate-800">
+      <pre className="mt-4 max-h-[640px] overflow-auto whitespace-pre-wrap rounded-2xl border border-[#D8E7E1] bg-[#FBFDFB] p-4 text-sm leading-7 text-slate-800">
         {text}
       </pre>
-      <div className="mt-3 space-y-2 rounded-lg bg-[#F8FAF7] px-4 py-3 text-xs leading-5 text-slate-600">
+      <div className="mt-3 space-y-2 rounded-2xl bg-[#F2F8F5] px-4 py-3 text-xs leading-5 text-slate-600">
         <p>复制后怎么用：{active.usageHint}</p>
         <p>复制后可直接粘贴到 ChatGPT、Kimi、豆包、Claude 等 AI 工具中使用，并补充你的具体材料。</p>
       </div>
@@ -265,9 +265,9 @@ function ResultTabs({
 
 function WaitingState() {
   return (
-    <div className="rounded-lg border border-dashed border-slate-300 bg-white p-6">
+    <div className="heyao-surface rounded-2xl border-dashed p-6">
       <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#E0F2F1] text-sm font-bold text-[#0F3D3E]">河</span>
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#E6F6F0] text-sm font-bold text-[#063F3A] ring-1 ring-[#BFDCD4]">河</span>
         <div>
           <h2 className="text-lg font-bold text-slate-950">等待改写</h2>
           <p className="mt-2 text-sm leading-7 text-slate-600">
@@ -277,7 +277,7 @@ function WaitingState() {
       </div>
       <div className="mt-6 grid gap-3">
         {resultTabs.map((tab) => (
-          <div key={tab.key} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <div key={tab.key} className="rounded-2xl border border-[#D8E7E1] bg-[#F8FBF8] p-4">
             <div className="h-4 w-28 rounded bg-slate-200" />
             <div className="mt-3 h-3 w-full rounded bg-slate-100" />
             <div className="mt-2 h-3 w-2/3 rounded bg-slate-100" />
@@ -392,14 +392,14 @@ export default function PromptRewriterPage() {
   }
 
   return (
-    <main className="bg-[#F8FAF7] pt-24 sm:pt-28">
-      <section className="mx-auto max-w-[1200px] px-5 pb-12">
+    <main className="heyao-page">
+      <section className="mx-auto max-w-[1280px] px-5 py-10 sm:py-12">
         <div className="mb-8 max-w-4xl">
-          <span className="inline-flex rounded-md border border-[#B6D8D2] bg-[#E0F2F1] px-3 py-1 text-sm font-semibold text-[#0F3D3E]">
+          <span className="inline-flex rounded-full border border-[#BFDCD4] bg-[#E6F6F0] px-3 py-1 text-sm font-semibold text-[#063F3A]">
             Prompt 工作流
           </span>
-          <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Prompt 诊断改写器</h1>
-          <p className="mt-4 text-lg font-semibold leading-8 text-[#0F3D3E]">
+          <h1 className="mt-4 text-4xl font-bold tracking-tight text-[#07151F] sm:text-5xl">Prompt 诊断改写器</h1>
+          <p className="mt-4 text-lg font-semibold leading-8 text-[#063F3A]">
             先理解你的任务，再诊断缺失信息，最后生成可直接复制到 AI 平台的结构化 Prompt。
           </p>
           <p className="mt-3 text-base leading-7 text-slate-600">
@@ -438,7 +438,7 @@ export default function PromptRewriterPage() {
                         setInput(example.value);
                         setError("");
                       }}
-                      className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-[#1E6F5C] hover:bg-[#E0F2F1] hover:text-[#0F3D3E]"
+                      className="rounded-xl border border-[#D8E7E1] bg-white/80 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-[#0B6B5E] hover:bg-[#E6F6F0] hover:text-[#063F3A]"
                     >
                       {example.label}
                     </button>
@@ -462,10 +462,10 @@ export default function PromptRewriterPage() {
                       key={item.name}
                       type="button"
                       onClick={() => setMode(item.name)}
-                      className={`rounded-lg border p-4 text-left transition ${
+                    className={`rounded-2xl border p-4 text-left transition ${
                         selected
-                          ? "border-[#0F3D3E] bg-[#0F3D3E] text-white shadow-sm"
-                          : "border-slate-200 bg-white text-slate-700 hover:border-[#1E6F5C] hover:bg-[#E0F2F1]"
+                          ? "border-[#063F3A] bg-[#063F3A] text-white shadow-[0_14px_28px_rgba(6,63,58,0.18)]"
+                          : "border-[#D8E7E1] bg-white/80 text-slate-700 hover:border-[#0B6B5E] hover:bg-[#E6F6F0]"
                       }`}
                     >
                       <span className="block text-sm font-bold">{item.name}</span>
@@ -497,7 +497,7 @@ export default function PromptRewriterPage() {
                   <h2 className="text-lg font-bold text-slate-950">最近生成 5 条</h2>
                   <p className="mt-1 text-sm text-slate-500">本地保存，不登录、不上传。</p>
                 </div>
-                <span className="rounded-md bg-[#E0F2F1] px-3 py-1 text-sm font-semibold text-[#0F3D3E]">
+                <span className="rounded-xl bg-[#E6F6F0] px-3 py-1 text-sm font-semibold text-[#063F3A]">
                   {historyOpen ? "收起" : "展开"}
                 </span>
               </button>
@@ -516,10 +516,10 @@ export default function PromptRewriterPage() {
                           key={record.id}
                           type="button"
                           onClick={() => restoreHistory(record)}
-                          className="w-full rounded-lg border border-slate-200 bg-[#F8FAF7] p-4 text-left transition hover:border-[#1E6F5C] hover:bg-[#E0F2F1]"
+                          className="w-full rounded-2xl border border-[#D8E7E1] bg-[#F8FBF8] p-4 text-left transition hover:border-[#0B6B5E] hover:bg-[#E6F6F0]"
                         >
                           <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                            <span className="rounded-md bg-white px-2 py-1 font-semibold text-[#0F3D3E]">{record.mode}</span>
+                            <span className="rounded-lg bg-white px-2 py-1 font-semibold text-[#063F3A]">{record.mode}</span>
                             <span>{formatTime(record.createdAt)}</span>
                             <span>{record.score}/100</span>
                           </div>
