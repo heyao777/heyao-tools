@@ -17,6 +17,19 @@ export type SceneId =
   | "business"
   | "general";
 
+export type TaskIntent =
+  | "AI Skill 方案"
+  | "AI 工具方案"
+  | "运营方案"
+  | "PRD"
+  | "简历表达"
+  | "面试回答"
+  | "论文分析"
+  | "学习计划"
+  | "文章大纲"
+  | "文本清洗"
+  | "通用任务";
+
 export type RewriterResult = {
   basic: string;
   advanced: string;
@@ -33,6 +46,9 @@ export type RewriteModeDetail = {
 export type PromptAnalysis = {
   scene: SceneId;
   sceneLabel: string;
+  taskIntent: TaskIntent;
+  domain: string;
+  outputIntent: string;
   role: string;
   taskType: string;
   topic: string;
@@ -340,7 +356,62 @@ function unique(items: string[]) {
   return Array.from(new Set(items.filter(Boolean)));
 }
 
+export function detectTaskIntent(input: string): TaskIntent {
+  if (isSkillDesignIntent(input)) {
+    return includesAny(input, ["skill", "技能"]) ? "AI Skill 方案" : "AI 工具方案";
+  }
+
+  if (includesAny(input, ["PRD", "产品需求", "需求文档", "功能拆解", "开发任务", "验收标准"])) return "PRD";
+  if (includesAny(input, ["简历", "项目经历", "经历表达"]) && includesAny(input, ["改", "优化", "求职", "岗位"])) return "简历表达";
+  if (includesAny(input, ["面试", "面试回答", "自我介绍"])) return "面试回答";
+  if (includesAny(input, ["论文", "文献", "研究"]) && includesAny(input, ["分析", "核心观点", "论证", "创新点", "不足"])) return "论文分析";
+  if (includesAny(input, ["学习计划", "复习", "备考", "每天任务", "一周", "7 天", "七天"])) return "学习计划";
+  if (includesAny(input, ["文本清洗", "清理文本", "整理文本", "会议记录", "结构整理"])) return "文本清洗";
+  if (includesAny(input, ["账号", "起号", "涨粉", "运营方案", "内容方向", "A/B", "选题", "封面"])) return "运营方案";
+  if (includesAny(input, ["文章大纲", "写作大纲", "文章结构", "公众号文章", "标题"])) return "文章大纲";
+
+  return "通用任务";
+}
+
+export function detectDomain(input: string) {
+  if (includesAny(input, ["小说", "网文", "章节", "人物设定", "世界观"])) return "小说写作";
+  if (includesAny(input, ["小红书"])) return "小红书";
+  if (includesAny(input, ["抖音", "短视频"])) return "短视频内容";
+  if (includesAny(input, ["公众号"])) return "公众号";
+  if (includesAny(input, ["简历", "求职", "岗位", "面试", "HR"])) return "求职";
+  if (includesAny(input, ["论文", "文献", "研究", "学术"])) return "学术论文";
+  if (includesAny(input, ["产品", "PRD", "开发", "页面", "功能", "网站"])) return "产品开发";
+  if (includesAny(input, ["Codex", "AI 编程", "代码", "编程"])) return "AI 编程";
+  if (includesAny(input, ["写作", "文案", "文章", "脚本"])) return "内容创作";
+  if (includesAny(input, ["学习", "复习", "课程", "考试", "语法"])) return "学习";
+  return "通用领域";
+}
+
+export function detectOutputFormat(input: string) {
+  const matched = formatWords.filter((word) => includesAny(input, [word]));
+  const outputs: string[] = [];
+
+  if (matched.length) outputs.push(...matched);
+  if (/[aA]\s*\/\s*[bB]|A\/B|a\/b|对照组|A组|B组|a组|b组/.test(input)) outputs.push("A/B 方案");
+  if (includesAny(input, ["模板", "复用"])) outputs.push("可复用模板");
+  if (includesAny(input, ["步骤", "流程"])) outputs.push("步骤");
+  if (includesAny(input, ["清单", "列表"])) outputs.push("清单");
+  if (includesAny(input, ["表格"])) outputs.push("表格");
+
+  return unique(outputs).join(" / ") || "Markdown";
+}
+
 export function detectScene(input: string): SceneId {
+  const taskIntent = detectTaskIntent(input);
+
+  if (taskIntent === "AI Skill 方案" || taskIntent === "AI 工具方案") return "skillDesign";
+  if (taskIntent === "运营方案") return "xiaohongshu";
+  if (taskIntent === "简历表达" || taskIntent === "面试回答") return "resume";
+  if (taskIntent === "论文分析") return "academic";
+  if (taskIntent === "学习计划") return "study";
+  if (taskIntent === "PRD") return "product";
+  if (taskIntent === "文本清洗") return "general";
+
   const scored = Object.entries(sceneConfigs)
     .filter(([scene]) => scene !== "general" && scene !== "skillDesign")
     .map(([scene, config]) => ({
@@ -502,6 +573,17 @@ function extractKeywords(input: string, scene: SceneId) {
   return unique([...sceneKeywords, ...generic]).slice(0, 8);
 }
 
+function resolveSceneLabel(scene: SceneId, input: string) {
+  if (scene === "xiaohongshu") {
+    if (includesAny(input, ["小红书"])) return "小红书 / 内容运营";
+    if (includesAny(input, ["抖音", "快手", "视频号", "短视频"])) return "短视频 / 内容运营";
+    if (includesAny(input, ["公众号"])) return "公众号 / 内容运营";
+    return "内容账号运营";
+  }
+
+  return sceneConfigs[scene].label;
+}
+
 function hasBackgroundInfo(input: string) {
   return (
     input.length >= 40 ||
@@ -513,17 +595,21 @@ export function analyzePromptInput(input: string): PromptAnalysis {
   const rawInput = input.trim();
   const scene = detectScene(rawInput);
   const config = sceneConfigs[scene];
+  const outputIntent = detectOutputFormat(rawInput);
 
   return {
     scene,
-    sceneLabel: config.label,
+    sceneLabel: resolveSceneLabel(scene, rawInput),
+    taskIntent: detectTaskIntent(rawInput),
+    domain: detectDomain(rawInput),
+    outputIntent,
     role: config.role,
     taskType: extractTaskType(rawInput, scene),
     topic: extractTopic(rawInput, scene),
     audience: extractAudience(rawInput, scene),
     platform: extractFirst(rawInput, platformWords, config.defaultPlatform),
     tone: extractTone(rawInput, scene),
-    outputFormat: extractOutputFormat(rawInput),
+    outputFormat: outputIntent,
     constraints: extractConstraints(rawInput),
     keywords: extractKeywords(rawInput, scene),
     rawInput,
@@ -540,6 +626,9 @@ function targetAndConstraintBlock(analysis: PromptAnalysis, mode?: RewriteMode) 
 
   return `**目标与约束**
 - 场景：${analysis.sceneLabel}
+- 产物类型：${analysis.taskIntent}
+- 应用领域：${analysis.domain}
+- 输出形式：${analysis.outputIntent}
 ${modeLine}
 - 平台：${analysis.platform}
 - 主题：${analysis.topic}
@@ -550,9 +639,386 @@ ${modeLine}
 ${constraints.map((item) => `- ${item}`).join("\n")}`;
 }
 
+type StepInstruction = {
+  title: string;
+  bullets: string[];
+};
+
+function sceneNoun(analysis: PromptAnalysis) {
+  if (analysis.scene === "skillDesign") return analysis.topic;
+  if (analysis.scene === "xiaohongshu") return analysis.platform === "建议补充" ? "目标内容平台" : analysis.platform;
+  return analysis.topic;
+}
+
+export function buildStepInstructions(scene: SceneId, analysis: PromptAnalysis): StepInstruction[] {
+  const subject = sceneNoun(analysis);
+  const hasAb = analysis.constraints.some((item) => /A\/B|对照/.test(item)) || /[aA]\s*\/\s*[bB]|A组|B组|a组|b组/.test(analysis.rawInput);
+
+  const templates: Record<SceneId, StepInstruction[]> = {
+    skillDesign: [
+      {
+        title: "Skill 核心定位",
+        bullets: [
+          `用一句话说明「${analysis.topic}」的核心价值，明确它面向谁、解决什么问题、最终交付什么结果。`,
+          `说明它服务的用户群体，并把用户的核心痛点拆成 3 到 5 条。`,
+          "说明它与普通 AI 写作、问答或聊天工具的差异，重点突出垂直场景、可复用流程和稳定输出。",
+        ],
+      },
+      {
+        title: "目标用户与使用场景",
+        bullets: [
+          "列出 3 类核心用户画像，每类包含身份、使用动机、典型任务和付费可能性。",
+          "分析每类用户在真实使用中的阻碍，例如不会写提示词、缺少结构、输出不稳定或效率低。",
+          "判断这个 Skill 更适合个人用户、创作者、工作室还是内容团队，并说明理由。",
+        ],
+      },
+      {
+        title: "核心功能模块",
+        bullets: [
+          "设计 5 到 8 个核心功能模块，每个模块写清输入内容、处理逻辑和输出结果。",
+          "标注哪些功能属于 MVP 第一版必须实现，哪些可以放到后续增强。",
+          `功能设计必须保留原始关键词：${analysis.keywords.join("、") || analysis.topic}。`,
+        ],
+      },
+      {
+        title: "动态参数与风格机制",
+        bullets: [
+          "如果用户提到语气、风格或类型变化，请设计可配置参数机制。",
+          "说明系统如何根据不同内容类型切换输出风格，例如类型、语气、节奏、长度和商业化程度。",
+          "给出变量示例：【内容类型】【目标风格】【输出长度】【商业化程度】【限制条件】。",
+        ],
+      },
+      {
+        title: "用户使用流程",
+        bullets: [
+          "设计从用户输入需求到生成结果的完整流程，至少包含输入、理解、生成、调整和导出。",
+          "说明每一步用户需要填写什么字段，系统应该返回什么结果。",
+          "标出关键交互节点，例如参数选择、结果预览、二次改写和保存模板。",
+        ],
+      },
+      {
+        title: "可复用 Prompt 模板",
+        bullets: [
+          "输出一套可直接用于 Skill 内部的 Prompt 模板，要求变量清楚、边界明确。",
+          "模板中必须包含【用户目标】【内容类型】【风格要求】【限制条件】【输出格式】等变量。",
+          "说明模板如何被前端表单或工作流调用，避免用户每次从零写需求。",
+        ],
+      },
+      {
+        title: "商业化方案",
+        bullets: [
+          "提出至少 3 种商业化路径，例如订阅、模板包、工作室服务、垂直行业版本或团队授权。",
+          "分析每种路径适合的人群、优点、风险和验证方式。",
+          "不要只写会员收费，要说明具体权益、交付形式和用户为什么愿意付费。",
+        ],
+      },
+      {
+        title: "MVP 开发优先级",
+        bullets: [
+          "区分第一版必须做、第二版增强、后续扩展三层功能。",
+          "给出功能优先级排序，并说明排序依据是用户价值、开发成本还是验证效率。",
+          "给出最小可验证版本建议，包括第一批用户、核心测试任务和成功标准。",
+        ],
+      },
+      {
+        title: "验收标准",
+        bullets: [
+          "给出判断这个 Skill 是否好用的标准，包括输出质量、风格可控性、稳定性、复用性和商业价值。",
+          "为每个标准设计可观察指标，例如完成时间、修改次数、用户复用率或付费意愿。",
+          "说明哪些结果代表 MVP 可以继续迭代，哪些结果说明需要重新调整定位。",
+        ],
+      },
+    ],
+    xiaohongshu: [
+      {
+        title: "账号定位与差异化",
+        bullets: [
+          `给出「${analysis.topic}」的一句话账号定位，说明面向谁、解决什么问题、主要输出什么内容。`,
+          "给出 3 个账号名建议，并分别说明适合的风格和记忆点。",
+          `分析账号与同类内容账号的差异点，重点突出 ${analysis.keywords.join("、") || subject}。`,
+        ],
+      },
+      {
+        title: "目标用户画像",
+        bullets: [
+          "列出 3 类核心用户，每类包含身份、痛点、关注内容和互动动机。",
+          "说明他们为什么会停留、收藏、评论或关注这个账号。",
+          "把用户需求转化成可持续生产的内容主题。",
+        ],
+      },
+      {
+        title: "内容方向与 A/B 测试",
+        bullets: hasAb
+          ? [
+              "分别设计 A 组和 B 组内容方向，明确每组的内容风格、选题方向和语气。",
+              "为每组设置验证指标，例如完播率、收藏率、评论率、关注转化率。",
+              "说明测试周期、样本数量和根据数据保留或调整方向的规则。",
+            ]
+          : [
+              "设计 2 到 3 个可持续内容方向，并说明每个方向适合的用户需求。",
+              "为每个方向给出内容形式、语气风格和验证指标。",
+              "说明如何用小批量发布验证内容方向是否值得继续做。",
+            ],
+      },
+      {
+        title: "冷启动选题",
+        bullets: [
+          "给出 5 到 10 个适合冷启动发布的选题。",
+          "每个选题包含标题方向、内容切入点和互动钩子。",
+          "选题要覆盖入门认知、实操案例、误区澄清和工具使用等层次。",
+        ],
+      },
+      {
+        title: "封面与视觉风格",
+        bullets: [
+          "给出封面风格建议，包括版式、颜色、标题字数和视觉识别点。",
+          "说明如何让封面与账号定位一致，并适合目标平台的信息流浏览。",
+          "给出 3 条可执行的封面制作规则。",
+        ],
+      },
+      {
+        title: "发布与运营策略",
+        bullets: [
+          "给出发布频率、发布时间、标签策略和内容复用方式。",
+          "设计评论区互动方法，包括置顶评论、追问引导和私信承接。",
+          "说明如何把高表现内容扩展成系列栏目。",
+        ],
+      },
+      {
+        title: "数据复盘指标",
+        bullets: [
+          "列出需要观察的数据指标，例如曝光、点击、完播、收藏、评论、关注转化。",
+          "说明每个指标对应判断什么问题。",
+          "给出基于数据调整选题、封面、脚本和发布时间的规则。",
+        ],
+      },
+    ],
+    resume: [
+      {
+        title: "目标岗位识别",
+        bullets: [
+          "识别用户想申请的岗位、岗位能力关键词和表达使用场景。",
+          "如果目标岗位缺失，请提醒用户补充，不要自行假设具体岗位。",
+          "说明当前经历最适合突出哪些能力。",
+        ],
+      },
+      {
+        title: "经历亮点提炼",
+        bullets: [
+          "从原始经历中提炼任务、动作、结果和能力。",
+          "保留用户提供的真实数据，例如阅读量从几百提升到两千。",
+          "不要虚构业绩；缺失的数据用【可补充数据】占位。",
+        ],
+      },
+      {
+        title: "简历版表达",
+        bullets: [
+          "改写成适合简历项目经历的表达，每条尽量用动作动词开头。",
+          "体现方法、协作、结果和岗位相关能力。",
+          "输出 2 到 3 条不同力度的简历 bullet，方便用户选择。",
+        ],
+      },
+      {
+        title: "STAR 面试版表达",
+        bullets: [
+          "按 Situation、Task、Action、Result 结构组织回答。",
+          "语言适合口头表达，控制在 1 到 2 分钟。",
+          "突出用户本人承担的动作和复盘收获。",
+        ],
+      },
+      {
+        title: "可补充信息",
+        bullets: [
+          "列出用户还可以补充的数据、职责边界、团队规模或工具方法。",
+          "说明每项补充信息会如何增强简历可信度。",
+          "所有不确定内容都使用【可补充数据】标注。",
+        ],
+      },
+    ],
+    academic: [
+      {
+        title: "研究主题识别",
+        bullets: [
+          "提取论文主题、研究对象和研究问题。",
+          "说明论文试图解决的核心学术或实践问题。",
+          "如果没有论文全文，请基于用户提供的信息列出需要补充的材料。",
+        ],
+      },
+      {
+        title: "核心观点梳理",
+        bullets: [
+          "输出论文的主要观点，并区分作者观点和论证材料。",
+          "每个观点都说明它对应的证据或论证依据。",
+          "用清晰编号呈现，便于课堂汇报或复习。",
+        ],
+      },
+      {
+        title: "论证结构分析",
+        bullets: [
+          "分析论文如何展开论证，包括问题提出、理论框架、材料分析和结论。",
+          "输出章节结构或逻辑链条。",
+          "指出论证中最关键的转折点或支撑点。",
+        ],
+      },
+      {
+        title: "创新点与不足",
+        bullets: [
+          "提炼论文的创新点，可以从研究对象、方法、材料或解释框架展开。",
+          "指出可能的不足、边界或可继续追问的问题。",
+          "注意区分明确不足和需要进一步验证的猜测。",
+        ],
+      },
+      {
+        title: "阅读笔记输出",
+        bullets: [
+          "输出适合复习或写作使用的结构化笔记。",
+          "包含关键词、核心观点、论证结构、创新点、不足和可引用表达。",
+          "最后给出 3 个可继续追问的问题。",
+        ],
+      },
+    ],
+    study: [
+      {
+        title: "学习目标拆解",
+        bullets: [
+          `明确用户要学习或复习的主题：${analysis.topic}。`,
+          "把学习内容拆成 4 到 6 个知识模块。",
+          "说明每个模块需要掌握到什么程度。",
+        ],
+      },
+      {
+        title: "时间安排",
+        bullets: [
+          "根据用户给定时间制定每日任务；如果没有明确时间，默认生成 7 天计划。",
+          "每天安排学习、练习和复盘三类任务。",
+          "控制任务量，保证普通学习者可以执行。",
+        ],
+      },
+      {
+        title: "每日任务",
+        bullets: [
+          "每天包含学习内容、练习方式和复盘任务。",
+          "练习方式要可操作，例如做题、复述、整理表格或输出小结。",
+          "给出每天完成后的产出物，方便检查进度。",
+        ],
+      },
+      {
+        title: "检查方式",
+        bullets: [
+          "设计自测题、输出任务或复述任务。",
+          "说明用户如何判断自己是否真正掌握。",
+          "给出每个阶段的检查标准。",
+        ],
+      },
+      {
+        title: "调整建议",
+        bullets: [
+          "说明如果进度落后应该删减什么、保留什么。",
+          "给出时间不足、理解困难和练习效果差三种情况的调整办法。",
+          "最后输出一个可复用的学习复盘模板。",
+        ],
+      },
+    ],
+    writing: [
+      {
+        title: "主题与受众",
+        bullets: [
+          "明确内容主题、目标读者和读者痛点。",
+          "说明这篇内容希望改变读者的认知、行为还是决策。",
+          "提炼一个清晰的中心观点。",
+        ],
+      },
+      {
+        title: "标题与角度",
+        bullets: [
+          "给出 5 个标题方向，每个标题说明吸引点和适合平台。",
+          "区分认知型、案例型、方法型和观点型角度。",
+          "避免空泛标题，标题要能对应具体内容承诺。",
+        ],
+      },
+      {
+        title: "内容结构",
+        bullets: [
+          "设计文章大纲，包含开头、主体小节和结尾。",
+          "每个小节说明要回答的问题、论点和例子。",
+          "给出适合直接写作的段落推进顺序。",
+        ],
+      },
+    ],
+    product: [
+      {
+        title: "产品目标",
+        bullets: [
+          "明确产品要解决的问题、目标用户和核心使用场景。",
+          "说明第一版产品成功的判断标准。",
+          "把用户需求拆成必须做和可延后两类。",
+        ],
+      },
+      {
+        title: "核心功能",
+        bullets: [
+          "列出核心功能模块，每个模块说明输入、处理和输出。",
+          "标注优先级和依赖关系。",
+          "给出每个功能的验收标准。",
+        ],
+      },
+      {
+        title: "页面与流程",
+        bullets: [
+          "梳理页面结构、主要入口和用户操作路径。",
+          "说明关键交互状态，例如空状态、生成中、成功、错误和复制。",
+          "输出开发任务清单。",
+        ],
+      },
+    ],
+    business: [
+      {
+        title: "沟通目标",
+        bullets: [
+          "明确沟通对象、核心目的和希望对方采取的动作。",
+          "提炼必须传达的 3 个关键信息。",
+          "判断语气应该正式、友好、坚定还是简洁。",
+        ],
+      },
+      {
+        title: "表达结构",
+        bullets: [
+          "按背景、目的、依据、请求和下一步组织内容。",
+          "去掉含糊表达，保留必要事实和边界。",
+          "输出正式版本和简洁版本。",
+        ],
+      },
+    ],
+    general: [
+      {
+        title: "任务目标",
+        bullets: [
+          "先用一句话复述用户希望完成的任务。",
+          "拆解完成任务所需的信息、步骤和输出物。",
+          "如果缺少关键信息，最多提出 3 个澄清问题。",
+        ],
+      },
+      {
+        title: "执行步骤",
+        bullets: [
+          "把任务拆成可执行步骤，每一步说明输入、处理方式和输出。",
+          "为最终结果设置质量标准。",
+          "按用户要求的格式输出。",
+        ],
+      },
+    ],
+  };
+
+  return templates[scene];
+}
+
+export function getSceneTemplate(analysis: PromptAnalysis) {
+  return buildStepInstructions(analysis.scene, analysis);
+}
+
 function stepBlock(analysis: PromptAnalysis) {
-  return sceneConfigs[analysis.scene].steps
-    .map((step, index) => `### 第${index + 1}步：${step}\n- 请结合原始需求展开\n- 输出具体、可执行的内容`)
+  return buildStepInstructions(analysis.scene, analysis)
+    .map((step, index) => `### 第${index + 1}步：${step.title}\n${step.bullets.map((bullet) => `- ${bullet}`).join("\n")}`)
     .join("\n\n");
 }
 
@@ -651,7 +1117,7 @@ ${featureExamples}
 - 使用 ${analysis.outputFormat}
 - 标题用 ##
 - 列表用 -
-- 内容要具体、可执行
+- 内容要包含可操作细节、判断标准和落地步骤
 - 不要泛泛而谈
 - 不要把它写成普通内容写作方案`;
 }
@@ -785,6 +1251,66 @@ ${sceneConfigs[analysis.scene].steps.map((step, index) => `${index + 1}. ${step}
 - 如果信息不足，请先列出需要补充的问题`;
 }
 
+const bannedPlaceholderLines = [
+  "请结合原始需求展开",
+  "输出具体、可执行的内容",
+  "根据实际情况调整",
+  "围绕主题展开",
+  "请补充更多信息",
+];
+
+function removeIrrelevantSceneWords(line: string, analysis: PromptAnalysis) {
+  if (analysis.scene !== "skillDesign") return line;
+
+  const raw = analysis.rawInput;
+  const irrelevantWords = [
+    { word: "公众号", allowed: includesAny(raw, ["公众号"]) },
+    { word: "标题方向", allowed: includesAny(raw, ["标题方向", "标题"]) },
+    { word: "文章结构", allowed: includesAny(raw, ["文章结构", "文章"]) },
+  ];
+
+  if (irrelevantWords.some((item) => !item.allowed && line.includes(item.word))) return "";
+  return line;
+}
+
+function dedupeRepeatedStepBullets(lines: string[]) {
+  const seen = new Set<string>();
+
+  return lines.filter((line) => {
+    const normalized = line.replace(/^-\s*/, "").trim();
+    if (!normalized || !line.trim().startsWith("-")) return true;
+    if (seen.has(normalized)) return false;
+    seen.add(normalized);
+    return true;
+  });
+}
+
+export function cleanGeneratedPrompt(output: string, analysis: PromptAnalysis) {
+  let cleaned = output;
+
+  for (const phrase of bannedPlaceholderLines) {
+    cleaned = cleaned.replaceAll(phrase, "");
+  }
+
+  const lines = dedupeRepeatedStepBullets(
+    cleaned
+      .split("\n")
+      .map((line) => removeIrrelevantSceneWords(line, analysis))
+      .filter((line, index, all) => line.trim() || all[index - 1]?.trim()),
+  );
+
+  cleaned = lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+
+  const importantKeywords = analysis.keywords.filter((keyword) => keyword.length >= 2);
+  const missingKeywords = importantKeywords.filter((keyword) => !cleaned.toLowerCase().includes(keyword.toLowerCase())).slice(0, 5);
+
+  if (missingKeywords.length) {
+    cleaned += `\n\n**必须保留的原始关键词**\n${missingKeywords.map((keyword) => `- ${keyword}`).join("\n")}`;
+  }
+
+  return cleaned;
+}
+
 export function buildPromptChecklist(analysis: PromptAnalysis): PromptHealthItem[] {
   return [
     {
@@ -904,9 +1430,9 @@ export function rewritePrompt(input: string, mode: RewriteMode): RewriterResult 
   const analysis = analyzePromptInput(input);
 
   return {
-    basic: buildOptimizedPrompt(analysis, "basic", mode),
-    advanced: buildOptimizedPrompt(analysis, "advanced", mode),
-    template: buildReusableTemplate(analysis, mode),
+    basic: cleanGeneratedPrompt(buildOptimizedPrompt(analysis, "basic", mode), analysis),
+    advanced: cleanGeneratedPrompt(buildOptimizedPrompt(analysis, "advanced", mode), analysis),
+    template: cleanGeneratedPrompt(buildReusableTemplate(analysis, mode), analysis),
   };
 }
 
