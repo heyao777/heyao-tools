@@ -209,16 +209,23 @@ function PromptHealthCard({ items, score }: { items: PromptHealthItem[]; score: 
 function ResultTabs({
   activeTab,
   onChange,
+  onEdit,
+  onReset,
   recommendedKey,
   result,
+  editedResult,
 }: {
   activeTab: RewriterResultKey;
   onChange: (key: RewriterResultKey) => void;
+  onEdit: (key: RewriterResultKey, value: string) => void;
+  onReset: (key: RewriterResultKey) => void;
   recommendedKey: RewriterResultKey;
   result: RewriterResult;
+  editedResult: RewriterResult;
 }) {
   const active = resultTabs.find((tab) => tab.key === activeTab) ?? resultTabs[1];
-  const text = result[active.key];
+  const text = editedResult[active.key];
+  const isEdited = text !== result[active.key];
 
   return (
     <Card>
@@ -250,11 +257,22 @@ function ResultTabs({
           <h3 className="text-lg font-bold text-slate-950">{active.title}</h3>
           <p className="mt-1 text-sm leading-6 text-slate-500">{active.description}</p>
         </div>
-        <CopyButton text={text} idleLabel={active.copyLabel} className="w-full sm:w-auto" />
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <Button type="button" variant="ghost" onClick={() => onReset(active.key)} disabled={!isEdited} className="w-full sm:w-auto">
+            恢复生成版本
+          </Button>
+          <CopyButton text={text} idleLabel={active.copyLabel} className="w-full sm:w-auto" />
+        </div>
       </div>
-      <pre className="mt-4 max-h-[640px] overflow-auto whitespace-pre-wrap rounded-2xl border border-[#D8E7E1] bg-[#FBFDFB] p-4 text-sm leading-7 text-slate-800">
-        {text}
-      </pre>
+      <p className="mt-4 rounded-2xl bg-[#F2F8F5] px-4 py-3 text-xs leading-5 text-slate-600">
+        你可以直接修改下方 Prompt，复制按钮会复制修改后的当前版本。
+      </p>
+      <textarea
+        value={text}
+        onChange={(event) => onEdit(active.key, event.target.value)}
+        spellCheck={false}
+        className="heyao-focus mt-3 min-h-[520px] w-full resize-y rounded-2xl border border-[#D8E7E1] bg-[#FBFDFB] p-4 text-sm leading-7 text-slate-800 outline-none"
+      />
       <div className="mt-3 space-y-2 rounded-2xl bg-[#F2F8F5] px-4 py-3 text-xs leading-5 text-slate-600">
         <p>复制后怎么用：{active.usageHint}</p>
         <p>复制后可直接粘贴到 ChatGPT、Kimi、豆包、Claude 等 AI 工具中使用，并补充你的具体材料。</p>
@@ -293,6 +311,7 @@ export default function PromptRewriterPage() {
   const [input, setInput] = useState("");
   const [mode, setMode] = useState<RewriteMode>("通用增强");
   const [result, setResult] = useState<RewriterResult | null>(null);
+  const [editedResult, setEditedResult] = useState<RewriterResult | null>(null);
   const [health, setHealth] = useState<PromptHealthItem[]>([]);
   const [analysis, setAnalysis] = useState<PromptAnalysis | null>(null);
   const [recommendedKey, setRecommendedKey] = useState<RewriterResultKey>("advanced");
@@ -356,6 +375,7 @@ export default function PromptRewriterPage() {
       setRecommendedKey(workflow.recommendedKey);
       setScore(workflow.score);
       setResult(workflow.result);
+      setEditedResult(workflow.result);
       setActiveTab("advanced");
       saveHistory(record);
       setLoading(false);
@@ -368,6 +388,7 @@ export default function PromptRewriterPage() {
     setMode(normalized.mode);
     setAnalysis(normalized.analysis);
     setResult(normalized.result);
+    setEditedResult(normalized.result);
     setHealth(normalized.health);
     setRecommendedKey(normalized.recommendedKey);
     setScore(normalized.score);
@@ -378,6 +399,7 @@ export default function PromptRewriterPage() {
   function clearAll() {
     setInput("");
     setResult(null);
+    setEditedResult(null);
     setHealth([]);
     setAnalysis(null);
     setRecommendedKey("advanced");
@@ -389,6 +411,21 @@ export default function PromptRewriterPage() {
   function clearHistory() {
     setHistory([]);
     window.localStorage.removeItem(historyKey);
+  }
+
+  function updateEditedResult(key: RewriterResultKey, value: string) {
+    setEditedResult((current) => {
+      if (!current) return current;
+      return { ...current, [key]: value };
+    });
+  }
+
+  function resetEditedResult(key: RewriterResultKey) {
+    if (!result) return;
+    setEditedResult((current) => {
+      if (!current) return current;
+      return { ...current, [key]: result[key] };
+    });
   }
 
   return (
@@ -538,7 +575,7 @@ export default function PromptRewriterPage() {
           </div>
 
           <div className="space-y-5">
-            {result && analysis ? (
+            {result && editedResult && analysis ? (
               <>
                 <Card>
                   <p className="text-xs font-semibold uppercase tracking-wide text-[#1E6F5C]">生成摘要</p>
@@ -549,7 +586,15 @@ export default function PromptRewriterPage() {
                 </Card>
                 <UnderstandingCard analysis={analysis} />
                 <PromptHealthCard items={health} score={score} />
-                <ResultTabs activeTab={activeTab} onChange={setActiveTab} recommendedKey={recommendedKey} result={result} />
+                <ResultTabs
+                  activeTab={activeTab}
+                  onChange={setActiveTab}
+                  onEdit={updateEditedResult}
+                  onReset={resetEditedResult}
+                  recommendedKey={recommendedKey}
+                  result={result}
+                  editedResult={editedResult}
+                />
               </>
             ) : (
               <WaitingState />
