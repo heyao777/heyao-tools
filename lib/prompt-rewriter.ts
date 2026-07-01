@@ -103,6 +103,15 @@ export const rewriteModeDetails: RewriteModeDetail[] = [
 
 export const rewriteModes = rewriteModeDetails.map((mode) => mode.name);
 
+const rewriteModeFocus: Record<RewriteMode, string[]> = {
+  通用增强: ["优先保证任务目标清楚、步骤完整、结果可直接复制使用。", "补齐角色、背景、限制条件和输出格式，减少 AI 误解空间。"],
+  内容创作: ["更重视标题吸引力、内容结构、读者兴趣点和传播性。", "输出时要兼顾选题角度、案例素材、表达节奏和互动设计。"],
+  学习写作: ["更重视概念解释、逻辑结构、知识总结和可复习性。", "输出时要适合论文、读书笔记、课程作业或知识梳理场景。"],
+  求职准备: ["更重视经历亮点、能力表达、结果量化和面试可讲性。", "输出时不要虚构经历数据，缺失信息用可补充项标注。"],
+  商务表达: ["更重视沟通目的、语气专业、结构清楚和下一步行动。", "输出时要减少含糊表达，让对方容易理解和执行。"],
+  结构化输出: ["更重视表格、清单、步骤、字段完整和执行顺序。", "输出时要让信息便于扫描、复制、复用和继续加工。"],
+};
+
 export const promptExamples = [
   {
     label: "内容账号运营",
@@ -619,10 +628,11 @@ export function analyzePromptInput(input: string): PromptAnalysis {
 function targetAndConstraintBlock(analysis: PromptAnalysis, mode?: RewriteMode) {
   const constraints = analysis.constraints.length ? analysis.constraints : ["如信息不足，请先提出不超过 3 个澄清问题"];
   const keywords = analysis.keywords.length ? analysis.keywords.join("、") : analysis.topic;
+  const selectedMode = mode ?? "通用增强";
   const modeLine =
     analysis.scene === "skillDesign"
       ? "- 任务类型：AI Skill / AI 工具方案设计"
-      : `- 优化方向：${mode ?? "通用增强"}`;
+      : `- 优化方向：${selectedMode}`;
 
   return `**目标与约束**
 - 场景：${analysis.sceneLabel}
@@ -636,7 +646,17 @@ ${modeLine}
 - 语气：${analysis.tone}
 - 关键词：${keywords}
 - 输出格式：${analysis.outputFormat}
-${constraints.map((item) => `- ${item}`).join("\n")}`;
+${constraints.map((item) => `- ${item}`).join("\n")}
+
+${modeFocusBlock(selectedMode)}`;
+}
+
+function modeFocusBlock(mode?: RewriteMode) {
+  const selectedMode = mode ?? "通用增强";
+
+  return `输出侧重点：
+- 当前优化方向：${selectedMode}
+${rewriteModeFocus[selectedMode].map((item) => `- ${item}`).join("\n")}`;
 }
 
 type StepInstruction = {
@@ -1073,6 +1093,8 @@ ${analysis.rawInput}
 - 结果要求：清晰、结构化、可执行、适合交给开发者继续实现
 ${analysis.constraints.map((item) => `- ${item}`).join("\n")}
 
+${modeFocusBlock(mode)}
+
 **请按以下结构输出方案**
 
 ## 1. Skill 核心定位
@@ -1113,10 +1135,10 @@ ${featureExamples}
 - 给出判断这个 Skill 是否好用的标准
 - 包括输出质量、可控性、复用性、稳定性和商业价值
 
-**输出要求**
+输出要求：
 - 使用 ${analysis.outputFormat}
-- 标题用 ##
-- 列表用 -
+- 各部分标题使用二级标题
+- 内容使用短横线列表
 - 内容要包含可操作细节、判断标准和落地步骤
 - 不要泛泛而谈
 - 不要把它写成普通内容写作方案`;
@@ -1162,10 +1184,10 @@ ${targetAndConstraintBlock(analysis, mode)}
 
 ${stepBlock(analysis)}
 
-**输出格式要求**
+输出格式要求：
 - 全部内容使用 ${analysis.outputFormat}
-- 标题层级清楚，建议使用 ## 和 ###
-- 列表用 -
+- 标题层级要清楚，各部分标题使用二级标题，小节标题使用三级标题
+- 内容使用短横线列表
 - 直接输出结果正文，不要额外解释
 - 不要虚构事实；如果信息不足，请先提出最多 3 个澄清问题`;
 }
@@ -1182,6 +1204,8 @@ export function buildReusableTemplate(analysis: PromptAnalysis, mode?: RewriteMo
 - 商业化方向：【个人用户 / 工作室 / 团队 / SaaS / 咨询交付】
 - 风格或参数要求：【填写是否需要根据内容类型动态变化】
 - 输出格式：【Markdown】
+
+${modeFocusBlock(mode)}
 
 **请按以下结构输出**
 
@@ -1234,6 +1258,8 @@ export function buildReusableTemplate(analysis: PromptAnalysis, mode?: RewriteMo
 - 目标受众：【${analysis.audience}】
 - 语气风格：【${analysis.tone}】
 - 输出格式：【${analysis.outputFormat}】
+
+${modeFocusBlock(mode)}
 
 **输入内容**
 【粘贴原始材料、经历、论文、产品需求或内容主题】
