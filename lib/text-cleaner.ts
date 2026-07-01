@@ -6,6 +6,8 @@ export type CleanRule =
   | "aiPhrases"
   | "symbols";
 
+export type CleanMode = "light" | "standard" | "deep";
+
 export type TextCleanOptions = {
   removeChineseInnerSpaces?: boolean;
   conservativeSymbols?: boolean;
@@ -25,6 +27,8 @@ export type CleanTextResult = {
   cleanedCount: number;
   cleanedText: string;
   stats: CleanTextStats;
+  records: string[];
+  mode?: CleanMode;
 };
 
 type MutableStats = Omit<CleanTextStats, "originalCount" | "cleanedCount" | "reducedCount">;
@@ -158,6 +162,73 @@ function cleanMessySymbols(input: string, stats: MutableStats, options: TextClea
   return text;
 }
 
+function normalizeChinesePunctuation(input: string) {
+  return input
+    .replace(/,/g, "，")
+    .replace(/;/g, "；")
+    .replace(/:/g, "：")
+    .replace(/\?/g, "？")
+    .replace(/!/g, "！");
+}
+
+function normalizeNumbering(input: string) {
+  return input.replace(/^\s*(\d+)[\.、)]\s*/gm, "$1. ");
+}
+
+function extractKeyPoints(input: string) {
+  return normalizeLineBreaks(input)
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length >= 8)
+    .slice(0, 8);
+}
+
+export function cleanTextByMode(input: string, mode: CleanMode, options: TextCleanOptions = {}): CleanTextResult {
+  if (mode === "light") {
+    const result = cleanTextWithRules(input, ["spaces", "blankLines", "symbols"], { conservativeSymbols: true, ...options });
+    return {
+      ...result,
+      cleanedText: normalizeChinesePunctuation(result.cleanedText),
+      cleanedCount: normalizeChinesePunctuation(result.cleanedText).length,
+      mode,
+      stats: { ...result.stats, cleanedCount: normalizeChinesePunctuation(result.cleanedText).length, reducedCount: Math.max(0, result.originalCount - normalizeChinesePunctuation(result.cleanedText).length) },
+      records: ["已去除多余换行", "已统一中文标点", "已修正明显排版问题", "未改变原意"],
+    };
+  }
+
+  if (mode === "standard") {
+    const result = cleanTextWithRules(input, ["spaces", "blankLines", "markdown", "symbols"], { conservativeSymbols: true, ...options });
+    const keyPoints = extractKeyPoints(result.cleanedText);
+    const cleanedText = normalizeNumbering(normalizeChinesePunctuation(result.cleanedText));
+    const finalText = keyPoints.length ? `${cleanedText}\n\n重点提取：\n${keyPoints.slice(0, 5).map((item) => `- ${item}`).join("\n")}` : cleanedText;
+    return {
+      ...result,
+      cleanedText: finalText,
+      cleanedCount: finalText.length,
+      stats: { ...result.stats, cleanedCount: finalText.length, reducedCount: Math.max(0, result.originalCount - finalText.length) },
+      mode,
+      records: ["已去除多余换行", "已统一中文标点", "已整理编号格式", "已提取重点", "未改变原意"],
+    };
+  }
+
+  const result = cleanTextWithRules(input, ["spaces", "blankLines", "markdown", "emoji", "aiPhrases", "symbols"], {
+    conservativeSymbols: true,
+    ...options,
+  });
+  const keyPoints = extractKeyPoints(result.cleanedText);
+  const summary = keyPoints.slice(0, 3).join("；") || result.cleanedText.slice(0, 80);
+  const finalText = `摘要：\n${summary}\n\n清晰版笔记：\n${keyPoints.map((item) => `- ${item}`).join("\n") || `- ${result.cleanedText}`}`;
+
+  return {
+    ...result,
+    cleanedText: finalText,
+    cleanedCount: finalText.length,
+    stats: { ...result.stats, cleanedCount: finalText.length, reducedCount: Math.max(0, result.originalCount - finalText.length) },
+    mode,
+    records: ["已去除多余换行", "已统一中文标点", "已整理编号格式", "已提取重点", "已重新组织内容", "尽量保留原意"],
+  };
+}
+
 export function cleanTextWithRules(
   input: string,
   rules: CleanRule[],
@@ -190,6 +261,7 @@ export function cleanTextWithRules(
       reducedCount: Math.max(0, originalCount - cleanedCount),
       ...stats,
     },
+    records: [],
   };
 }
 

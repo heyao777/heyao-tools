@@ -21,7 +21,7 @@ export default function Home() {
               把日常学习、写作、求职和 AI 提问中反复出现的任务，整理成一个可以随时打开、快速输入、直接复制结果的个人工作台。
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-              <Link href="#tools" className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#063F3A] px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(6,63,58,0.2)] transition hover:bg-[#0B6B5E]">
+              <Link href="/tools" className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#063F3A] px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(6,63,58,0.2)] transition hover:bg-[#0B6B5E]">
                 开始使用工具箱
               </Link>
               <Link href="/case-study" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-[#BFDCD4] bg-white/80 px-6 py-3 text-sm font-semibold text-[#063F3A] shadow-sm transition hover:bg-[#E6F6F0]">

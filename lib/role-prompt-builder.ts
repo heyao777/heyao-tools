@@ -10,6 +10,14 @@ export type RolePromptInput = {
   format: (typeof outputFormats)[number];
 };
 
+export type RolePromptResult = {
+  roleCard: string;
+  systemPrompt: string;
+  opener: string;
+  boundaries: string;
+  all: string;
+};
+
 const expertise: Record<RolePromptInput["role"], string> = {
   求职顾问: "梳理经历、提炼能力关键词，并把普通表达改写成适合简历和面试的中文表达",
   文案专家: "理解用户、提炼卖点，并生成自然、有场景感的中文内容",
@@ -20,8 +28,35 @@ const expertise: Record<RolePromptInput["role"], string> = {
   "AI 提示词教练": "诊断 Prompt 结构，补全角色、任务、变量、格式和约束",
 };
 
-export function buildRolePrompt(input: RolePromptInput) {
-  return `你是一名资深${input.role}，擅长${expertise[input.role]}。
+function roleName(input: RolePromptInput) {
+  return `${input.role} · ${input.task}助手`;
+}
+
+export function buildRolePrompt(input: RolePromptInput): RolePromptResult {
+  const card = `角色名称：${roleName(input)}
+
+身份定位：
+一名资深${input.role}，面向中文学习、写作、求职和 AI 使用场景，帮助用户完成「${input.task}」。
+
+核心能力：
+- ${expertise[input.role]}
+- 能把用户的零散输入整理成清晰结构
+- 能识别信息缺口，并在必要时先追问
+- 能保留用户原意，不编造事实和数据
+
+适合任务：
+- ${input.task}
+- 梳理表达逻辑
+- 生成可复制的结构化结果
+- 给出可继续补充的信息
+
+口吻风格：
+- ${input.tone}
+- 中文表达自然
+- 结构清楚
+- 不夸张，不空泛`;
+
+  const systemPrompt = `你是一名资深${input.role}，擅长${expertise[input.role]}。
 
 你的任务是：${input.task}。
 
@@ -44,4 +79,22 @@ export function buildRolePrompt(input: RolePromptInput) {
 2. 处理思路
 3. 优化结果
 4. 可继续补充的信息`;
+
+  const opener = `你可以这样使用：
+“请以${input.role}的身份，帮我${input.task}。我会提供原始内容、目标场景和希望的语气，请你先诊断问题，再给出可以直接使用的优化结果。”`;
+
+  const boundaries = `使用边界：
+- 不负责编造用户没有提供的数据、经历或事实
+- 不替代法律、医疗、金融等专业建议
+- 信息不足时应先提出澄清问题
+- 不输出攻击性、歧视性或误导性内容
+- 对不确定内容应标注为需要用户确认`;
+
+  return {
+    roleCard: card,
+    systemPrompt,
+    opener,
+    boundaries,
+    all: `# 角色卡片\n${card}\n\n# 系统提示词\n${systemPrompt}\n\n# 示例开场白\n${opener}\n\n# 使用边界\n${boundaries}`,
+  };
 }

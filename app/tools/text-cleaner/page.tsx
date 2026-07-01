@@ -1,18 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Textarea } from "@/components/Textarea";
 import {
+  cleanTextByMode,
   cleanTextWithRules,
+  type CleanMode,
   type CleanRule,
   type CleanTextResult,
   type TextCleanOptions,
 } from "@/lib/text-cleaner";
+import { recordToolUsage } from "@/lib/tool-usage";
 
 type SceneMode = {
-  id: string;
+  id: CleanMode;
   label: string;
   description: string;
   rules: CleanRule[];
@@ -23,36 +26,23 @@ const allRules: CleanRule[] = ["spaces", "blankLines", "markdown", "emoji", "aiP
 
 const sceneModes: SceneMode[] = [
   {
-    id: "ai",
-    label: "AI 回复清洗",
-    description: "适合清理“当然可以、以下是”等 AI 套话，并保留正文结构。",
-    rules: ["spaces", "blankLines", "markdown", "emoji", "aiPhrases"],
+    id: "light",
+    label: "轻度清洗",
+    description: "只修正格式，不改内容。",
+    rules: ["spaces", "blankLines", "symbols"],
   },
   {
-    id: "wechat",
-    label: "公众号文案",
-    description: "适合把 Markdown、重复空行和复制痕迹整理成稳定段落。",
+    id: "standard",
+    label: "标准清洗",
+    description: "整理结构，保留原意。",
     rules: ["spaces", "blankLines", "markdown", "emoji", "symbols"],
   },
   {
-    id: "xiaohongshu",
-    label: "小红书文案",
-    description: "适合去掉多余符号和套话，保留自然表达。",
-    rules: ["spaces", "blankLines", "aiPhrases", "symbols"],
-  },
-  {
-    id: "resume",
-    label: "简历文本",
-    description: "适合清理复制来的简历内容，保守处理符号和空行。",
-    rules: ["spaces", "blankLines", "markdown", "symbols"],
-    options: { conservativeSymbols: true },
-  },
-  {
-    id: "pdf",
-    label: "PDF 复制文本",
-    description: "适合清理 PDF 复制后的缩进、Tab、多空格和异常空行。",
-    rules: ["spaces", "blankLines", "emoji", "symbols"],
+    id: "deep",
+    label: "深度清洗",
+    description: "提取重点并重新组织。",
     options: { removeChineseInnerSpaces: true, conservativeSymbols: true },
+    rules: allRules,
   },
 ];
 
@@ -96,7 +86,7 @@ export default function TextCleanerPage() {
   const [output, setOutput] = useState("");
   const [result, setResult] = useState<CleanTextResult | null>(null);
   const [error, setError] = useState("");
-  const [activeSceneId, setActiveSceneId] = useState(sceneModes[0].id);
+  const [activeSceneId, setActiveSceneId] = useState<CleanMode>(sceneModes[0].id);
   const [removeChineseInnerSpaces, setRemoveChineseInnerSpaces] = useState(false);
   const [undoStack, setUndoStack] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
@@ -106,6 +96,10 @@ export default function TextCleanerPage() {
   const basisText = output || input;
 
   const liveInputCount = useMemo(() => input.length, [input]);
+
+  useEffect(() => {
+    recordToolUsage({ title: "文本清洗工具", href: "/tools/text-cleaner" });
+  }, []);
 
   function buildOptions(extra?: TextCleanOptions): TextCleanOptions {
     return {
@@ -130,6 +124,7 @@ export default function TextCleanerPage() {
     const nextResult = cleanTextWithRules(source, rules, buildOptions(extraOptions));
     setResult(nextResult);
     setOutput(nextResult.cleanedText);
+    recordToolUsage({ title: "文本清洗工具", href: "/tools/text-cleaner" });
   }
 
   function applyScene(scene: SceneMode) {
@@ -137,13 +132,14 @@ export default function TextCleanerPage() {
     if (basisText.trim()) {
       setError("");
       setUndoStack((items) => [basisText, ...items].slice(0, 10));
-      const nextResult = cleanTextWithRules(basisText, scene.rules, {
+      const nextResult = cleanTextByMode(basisText, scene.id, {
         conservativeSymbols: true,
         ...scene.options,
         removeChineseInnerSpaces: scene.options?.removeChineseInnerSpaces ?? removeChineseInnerSpaces,
       });
       setResult(nextResult);
       setOutput(nextResult.cleanedText);
+      recordToolUsage({ title: "文本清洗工具", href: "/tools/text-cleaner" });
     }
   }
 
@@ -173,6 +169,20 @@ export default function TextCleanerPage() {
     }
     setInput(output);
     setError("");
+  }
+
+  function downloadOutput() {
+    if (!output) {
+      setError("请先生成清洗结果");
+      return;
+    }
+    const blob = new Blob([output], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "heyao-cleaned-text.txt";
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   function clearAll() {
@@ -300,14 +310,36 @@ export default function TextCleanerPage() {
               <Button type="button" variant="secondary" onClick={replaceInput} disabled={!output}>
                 替换原文
               </Button>
-              <Button type="button" variant="secondary" onClick={copyOutput} disabled={!output}>
-                {copied ? "复制成功" : "复制"}
-              </Button>
-            </div>
-          </Card>
+            <Button type="button" variant="secondary" onClick={copyOutput} disabled={!output}>
+              {copied ? "复制成功" : "复制"}
+            </Button>
+            <Button type="button" variant="secondary" onClick={downloadOutput} disabled={!output}>
+              下载 .txt
+            </Button>
+          </div>
+        </Card>
         </div>
 
         <section className="heyao-surface mt-6 rounded-2xl p-5">
+          <h2 className="mb-4 text-base font-bold text-slate-950">处理记录</h2>
+          {result?.records.length ? (
+            <div className="mb-5 flex flex-wrap gap-2">
+              {result.records.map((record) => (
+                <span key={record} className="rounded-full border border-[#BFDCD4] bg-[#E6F6F0] px-3 py-1 text-sm font-medium text-[#063F3A]">
+                  {record}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="mb-5 rounded-2xl border border-dashed border-[#D8E7E1] bg-[#F8FBF8] p-4 text-sm text-slate-500">
+              暂无处理记录。选择清洗模式并生成结果后，这里会显示具体处理内容。
+            </p>
+          )}
+          {activeSceneId === "deep" ? (
+            <p className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              深度清洗会重新组织内容，但应尽量保留原意。请在重要场景中对照原文检查。
+            </p>
+          ) : null}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
             <Stat label="原文字数" value={stats.originalCount} />
             <Stat label="清洗后字数" value={stats.cleanedCount} />

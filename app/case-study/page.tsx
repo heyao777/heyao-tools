@@ -1,12 +1,21 @@
 import { Card } from "@/components/Card";
 import { SectionTitle } from "@/components/SectionTitle";
+import { tools } from "@/data/tools";
 
-const problems = ["Prompt 经常重复写", "文本复制后格式混乱", "简历经历表达不够清楚", "面试回答缺少结构", "常用模板散落在不同地方"];
-const features = [
-  ["Prompt 诊断改写器", "检查 Prompt 是否缺少关键信息，并生成结构化优化版本"],
-  ["角色提示词生成器", "快速生成可复用 System Prompt"],
-  ["文本清洗工具", "清理复制文本中的格式问题"],
-  ["求职表达优化器", "把普通经历整理成更清楚的表达"],
+const principles = [
+  ["中文场景优先", "优先解决中文学习、写作、求职和 AI 提问中的高频问题。"],
+  ["可复制结果", "工具输出尽量能直接复制到 AI 平台、文档、简历或工作流中继续使用。"],
+  ["本地优先", "当前工具优先在浏览器本地处理，不主动保存用户输入内容。"],
+  ["规则透明", "MVP 阶段使用本地规则和模板，让用户能理解结果从哪里来。"],
+];
+
+const architecture = [
+  "首页：说明河妖工具箱定位，并提供核心工具入口。",
+  "工具箱总览：支持搜索、分类筛选、最近使用和收藏空状态。",
+  "Prompt 诊断改写：识别任务、诊断缺失信息、生成可编辑 Prompt。",
+  "角色生成器：生成角色卡、系统提示词、示例开场白和使用边界。",
+  "文本清洗：按轻度、标准、深度模式整理文本并显示处理记录。",
+  "求职表达：把经历整理成简历、面试和自我介绍版本。",
 ];
 
 export default function CaseStudyPage() {
@@ -14,26 +23,54 @@ export default function CaseStudyPage() {
     <main className="heyao-page">
       <section className="mx-auto max-w-[1280px] px-5 py-12">
         <SectionTitle
-          eyebrow="工具箱设计说明"
-          title="我为什么做河妖 HeYao Tools"
-          description="这个页面记录 V1 的设计思路：把高频、重复、规则相对稳定的任务工具化。"
+          eyebrow="设计说明"
+          title="河妖 HeYao Tools 的产品设计"
+          description="这个页面记录 V1 的目标、信息架构、设计原则和隐私边界，方便后续继续迭代。"
         />
-        <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+
+        <div className="grid gap-6 lg:grid-cols-2">
           <Card>
-            <h2 className="text-lg font-bold text-slate-950">项目背景</h2>
+            <h2 className="text-lg font-bold text-slate-950">产品目标</h2>
             <p className="mt-4 text-sm leading-7 text-slate-600">
-              我在学习、写作、求职准备和使用 AI 工具的过程中，发现很多任务会不断重复出现。比如，每次让 AI 修改文本时，都要重新说明角色、任务、语气和输出格式；每次准备简历和面试回答时，都要重新整理经历；每次从网页复制资料时，又要手动清理格式。
-            </p>
-            <p className="mt-3 text-sm leading-7 text-slate-600">
-              这些事情本身并不难，但很消耗注意力。于是我开始把这些重复流程整理成一个个人工具箱，希望以后可以更快完成输入、整理、生成和复制。
+              河妖 HeYao Tools 希望把重复的文字处理、Prompt 编写、文本清洗和求职表达流程沉淀成可点击的小工具，减少每次从零组织语言的成本。
             </p>
           </Card>
           <Card>
-            <h2 className="text-lg font-bold text-slate-950">我的高频问题</h2>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {problems.map((problem) => (
-                <div key={problem} className="rounded-xl border border-[#BFDCD4] bg-[#E6F6F0] px-3 py-2 text-sm font-medium text-[#063F3A]">
-                  {problem}
+            <h2 className="text-lg font-bold text-slate-950">适用用户</h2>
+            <p className="mt-4 text-sm leading-7 text-slate-600">
+              适合经常使用 AI 工具的学生、内容创作者、求职者、产品学习者和需要整理中文文本的人。它不是通用办公套件，而是一个中文 AI 效率工具箱。
+            </p>
+          </Card>
+        </div>
+
+        <Card className="mt-6">
+          <h2 className="text-lg font-bold text-slate-950">设计原则</h2>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            {principles.map(([title, content]) => (
+              <div key={title} className="rounded-2xl border border-[#D8E7E1] bg-[#FBFDFB] p-4">
+                <h3 className="text-sm font-bold text-[#063F3A]">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{content}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <div className="mt-6 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+          <Card>
+            <h2 className="text-lg font-bold text-slate-950">信息架构</h2>
+            <div className="mt-4 space-y-3 text-sm leading-7 text-slate-600">
+              {architecture.map((item) => (
+                <p key={item}>- {item}</p>
+              ))}
+            </div>
+          </Card>
+          <Card>
+            <h2 className="text-lg font-bold text-slate-950">每个工具解决的问题</h2>
+            <div className="mt-4 space-y-3">
+              {tools.map((tool) => (
+                <div key={tool.href} className="rounded-2xl border border-[#D8E7E1] bg-[#FBFDFB] p-4">
+                  <h3 className="text-sm font-bold text-slate-900">{tool.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{tool.description}</p>
                 </div>
               ))}
             </div>
@@ -42,40 +79,21 @@ export default function CaseStudyPage() {
 
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <Card>
-            <h2 className="text-lg font-bold text-slate-950">解决思路</h2>
+            <h2 className="text-lg font-bold text-slate-950">隐私说明</h2>
             <p className="mt-4 text-sm leading-7 text-slate-600">
-              河妖 HeYao Tools 的核心思路是：把高频、重复、规则相对稳定的任务工具化。我不希望每次都从零开始写 Prompt 或整理内容，而是希望通过固定工具，把任务拆成输入项、处理逻辑和输出结果。这样既能节省时间，也能让表达更稳定。
+              当前工具优先在本地处理用户输入，不主动保存用户内容。最近使用记录仅保存在当前浏览器的 localStorage 中。若未来加入登录、云端历史或付费功能，将明确提示数据用途。
             </p>
           </Card>
           <Card>
-            <h2 className="text-lg font-bold text-slate-950">技术实现</h2>
-            <p className="mt-4 text-sm leading-7 text-slate-600">
-              V1 使用 Sites vinext starter、React、TypeScript 和 Tailwind CSS 实现。当前版本优先完成页面结构、交互流程和工具逻辑，暂时不接入真实 AI API。Prompt 分析和文本处理使用前端规则模拟，方便快速验证工具箱是否真的能改善个人效率。
-            </p>
+            <h2 className="text-lg font-bold text-slate-950">后续迭代计划</h2>
+            <div className="mt-4 space-y-3 text-sm leading-7 text-slate-600">
+              <p>- 增加更稳定的本地模板库和收藏工具。</p>
+              <p>- 为更多中文场景补充专用生成逻辑。</p>
+              <p>- 支持导出 Markdown、TXT 或复制为不同平台格式。</p>
+              <p>- 在明确隐私边界后，再考虑云端历史和账号能力。</p>
+            </div>
           </Card>
         </div>
-
-        <Card className="mt-6">
-          <h2 className="text-lg font-bold text-slate-950">当前功能</h2>
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[560px] border-collapse text-left text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 text-slate-500">
-                  <th className="py-3 pr-4 font-semibold">工具</th>
-                  <th className="py-3 font-semibold">解决的问题</th>
-                </tr>
-              </thead>
-              <tbody>
-                {features.map(([tool, problem]) => (
-                  <tr key={tool} className="border-b border-slate-100">
-                    <td className="py-3 pr-4 font-semibold text-slate-900">{tool}</td>
-                    <td className="py-3 text-slate-600">{problem}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
       </section>
     </main>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { EmptyState } from "@/components/EmptyState";
@@ -8,10 +8,11 @@ import { ResultCard } from "@/components/ResultCard";
 import { Textarea } from "@/components/Textarea";
 import { ToolShell } from "@/components/ToolShell";
 import { optimizeResumeExpression, type ResumeExpressionResult } from "@/lib/resume-expression";
+import { recordToolUsage } from "@/lib/tool-usage";
 
 const example = {
   targetRole: "AI 内容运营",
-  experience: "我在学校社团负责写推文，也会做活动宣传。",
+  experience: "我在学校社团负责公众号推文选题、撰写和排版，也参与活动宣传。曾把一次活动推文阅读量从几百提升到两千左右。",
   ability: "内容策划、中文写作、活动传播、用户理解",
   scenario: "简历 bullet",
 };
@@ -25,6 +26,10 @@ export default function ResumeExpressionPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    recordToolUsage({ title: "求职表达优化器", href: "/tools/resume-expression" });
+  }, []);
+
   function generate(payload = { targetRole, experience, ability, scenario }) {
     if (!payload.experience.trim()) {
       setError("请先输入内容");
@@ -34,6 +39,7 @@ export default function ResumeExpressionPage() {
     setLoading(true);
     window.setTimeout(() => {
       setResult(optimizeResumeExpression(payload));
+      recordToolUsage({ title: "求职表达优化器", href: "/tools/resume-expression" });
       setLoading(false);
     }, 450);
   }
@@ -61,7 +67,13 @@ ${result.template}
 ${result.resumeVersion}
 
 面试版表达：
-${result.interviewVersion}`
+${result.interviewVersion}
+
+自我介绍版：
+${result.selfIntroVersion}
+
+安全提示：
+${result.safetyNotice}`
     : "";
 
   return (
@@ -109,6 +121,11 @@ ${result.interviewVersion}`
             </label>
           </div>
           {error ? <p className="mt-3 text-sm font-medium text-rose-600">{error}</p> : null}
+          {!targetRole.trim() ? (
+            <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              建议补充目标岗位，这样可以让表达更匹配招聘要求。
+            </p>
+          ) : null}
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <Button type="button" onClick={() => generate()} disabled={loading}>
               {loading ? "生成中..." : "优化表达"}
@@ -138,6 +155,19 @@ ${result.interviewVersion}`
             <ResultCard title="完整结果" copyText={copyText}>
               <p>{result.diagnosis}</p>
             </ResultCard>
+            <ResultCard title="表达诊断">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {result.diagnostics.map((item) => (
+                  <div key={item.label} className="rounded-2xl border border-[#D8E7E1] bg-[#FBFDFB] p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <h3 className="text-sm font-bold text-slate-900">{item.label}</h3>
+                      <span className="text-sm font-bold text-[#063F3A]">{item.score}/100</span>
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{item.suggestion}</p>
+                  </div>
+                ))}
+              </div>
+            </ResultCard>
             <ResultCard title="可突出的能力关键词">
               <div className="flex flex-wrap gap-2">
                 {result.keywords.map((item) => (
@@ -154,7 +184,13 @@ ${result.interviewVersion}`
               <p>{result.resumeVersion}</p>
             </ResultCard>
             <ResultCard title="面试版表达" copyText={result.interviewVersion}>
-              <p>{result.interviewVersion}</p>
+              <pre className="whitespace-pre-wrap rounded-2xl border border-[#D8E7E1] bg-[#FBFDFB] p-4">{result.interviewVersion}</pre>
+            </ResultCard>
+            <ResultCard title="自我介绍版" copyText={result.selfIntroVersion}>
+              <p>{result.selfIntroVersion}</p>
+            </ResultCard>
+            <ResultCard title="安全提示">
+              <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{result.safetyNotice}</p>
             </ResultCard>
           </div>
         ) : (

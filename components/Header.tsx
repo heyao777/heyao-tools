@@ -36,7 +36,7 @@ export function Header() {
             );
           })}
           <Link
-            href="/#tools"
+            href="/tools"
             className="ml-0 inline-flex min-h-10 items-center justify-center rounded-xl bg-[#063F3A] px-4 py-2 font-semibold text-white shadow-[0_12px_24px_rgba(6,63,58,0.18)] transition hover:bg-[#0B6B5E] lg:ml-2"
           >
             打开工具箱

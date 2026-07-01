@@ -21,6 +21,7 @@ import {
   type RewriteMode,
   type RewriterResult,
 } from "@/lib/prompt-rewriter";
+import { recordToolUsage } from "@/lib/tool-usage";
 
 type HistoryRecord = {
   id: string;
@@ -323,6 +324,7 @@ export default function PromptRewriterPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    recordToolUsage({ title: "Prompt 诊断改写器", href: "/tools/prompt-rewriter" });
     try {
       const raw = window.localStorage.getItem(historyKey);
       if (raw) {
@@ -378,6 +380,7 @@ export default function PromptRewriterPage() {
       setEditedResult(workflow.result);
       setActiveTab("advanced");
       saveHistory(record);
+      recordToolUsage({ title: "Prompt 诊断改写器", href: "/tools/prompt-rewriter" });
       setLoading(false);
     }, 400);
   }
